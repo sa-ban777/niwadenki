@@ -7,26 +7,31 @@
 
 <style>
 body { font-family: sans-serif; padding: 10px; font-size: 16px; }
-select, input { font-size: 16px; padding: 4px; margin: 2px 0; }
+select, input { font-size: 16px; padding: 4px; margin: 2px 0; max-width: 80px; }
 .result { margin-top: 4px; font-weight: bold; font-size: 16px; }
 .section { margin-top: 12px; padding-top: 6px; border-top: 2px solid #ccc; }
 .row-result { font-size: 16px; margin: 2px 0; }
 h3, h4 { margin: 0 0 6px 0; }
 
+/* 2カラムレイアウト */
+.main-container { display: flex; flex-direction: column; gap: 15px; }
+.left-column { flex: 0 0 auto; max-width: 600px; }
+.right-column { flex: 0 0 auto; }
+
 /* 横並びレイアウト */
 .input-row { display: flex; gap: 8px; margin: 4px 0; align-items: center; }
-.input-group { flex: 1; min-width: 0; }
-.input-group label { display: block; font-size: 11px; margin-bottom: 2px; line-height: 1.2; }
-.input-group select, .input-group input { width: 100%; }
-.result-row { display: flex; gap: 12px; margin: 4px 0; }
-.result-item { flex: 1; }
+.input-group { flex: 0 0 auto; min-width: 0; }
+.input-group label { display: block; font-size: 11px; margin-bottom: 2px; line-height: 1.2; white-space: nowrap; }
+.input-group select, .input-group input { width: 80px; box-sizing: border-box; }
+.result-row { display: flex; gap: 12px; margin: 4px 0; flex-wrap: wrap; }
+.result-item { flex: 0 0 auto; white-space: nowrap; }
 
 /* 赤文字 */
 .red-text { color: red; }
 
 /* 表のスタイル（スマホ用：デフォルト） */
 .table-container { overflow-x: auto; margin-top: 8px; }
-table { border-collapse: collapse; width: 100%; min-width: 320px; font-size: 10px; }
+table { border-collapse: collapse; width: auto; min-width: 320px; font-size: 10px; }
 th, td { border: 1px solid #333; padding: 2px 1px; text-align: center; line-height: 1.1; white-space: nowrap; }
 th { background-color: #f0f0f0; font-weight: bold; font-size: 9px; }
 .header-row { background-color: #e0e0e0; }
@@ -35,106 +40,118 @@ th { background-color: #f0f0f0; font-weight: bold; font-size: 9px; }
 /* PC用（画面幅768px以上） */
 @media (min-width: 768px) {
   body { font-size: 18px; }
-  select, input { font-size: 18px; padding: 6px; }
-  .result { font-size: 20px; }
-  .input-group label { font-size: 14px; line-height: 1.3; }
+  select, input { font-size: 16px; padding: 6px; max-width: 90px; }
+  .result { font-size: 18px; }
+  .input-group label { font-size: 12px; line-height: 1.3; }
+  .input-group select, .input-group input { width: 90px; }
+  
+  /* 2カラムレイアウト（PC用） */
+  .main-container { flex-direction: row; align-items: flex-start; }
+  .left-column { flex: 0 0 auto; max-width: 500px; }
+  .right-column { flex: 0 0 auto; margin-left: 20px; }
   
   /* 表のスタイル（PC用） */
-  table { min-width: 600px; font-size: 14px; }
-  th, td { padding: 4px 6px; line-height: 1.3; }
-  th { font-size: 13px; }
-  .note { font-size: 13px; }
+  table { min-width: auto; font-size: 13px; }
+  th, td { padding: 4px 5px; line-height: 1.3; }
+  th { font-size: 12px; }
+  .note { font-size: 12px; }
 }
 </style>
 </head>
 
 <body>
 
-<h3>電線選定</h3>
+<div class="main-container">
+  <!-- 左カラム：電線選定と単相三線 -->
+  <div class="left-column">
+    <h3>電線選定</h3>
 
-<div class="input-row">
-  <div class="input-group">
-    <label>線種</label>
-    <select id="wire">
-      <option value="">選択</option>
-      <option>KIV</option>
-      <option>THIV</option>
-      <option>HRIV</option>
-      <option>WLI</option>
-    </select>
-  </div>
-  
-  <div class="input-group">
-    <label>用途</label>
-    <select id="usage">
-      <option value="">選択</option>
-      <option>一般</option>
-      <option>通信</option>
-    </select>
-  </div>
-  
-  <div class="input-group">
-    <label>電流(A)</label>
-    <input type="number" id="current" placeholder="例:120">
-  </div>
-</div>
-
-<div class="result-row">
-  <div class="result-item">記号: <span id="symbol">-</span></div>
-  <div class="result-item">線径: <span id="size" class="red-text">-</span></div>
-</div>
-
-<!-- 単相三線セクション -->
-<div class="section">
-  <h4>単相三線</h4>
-
-  <div class="input-row">
-    <div class="input-group">
-      <label>蓄電池<br>最大放電<br>電流[A]</label>
-      <input type="number" id="batteryMax" placeholder="任意">
+    <div class="input-row">
+      <div class="input-group">
+        <label>線種</label>
+        <select id="wire">
+          <option value="">選択</option>
+          <option>KIV</option>
+          <option>THIV</option>
+          <option>HRIV</option>
+          <option>WLI</option>
+        </select>
+      </div>
+      
+      <div class="input-group">
+        <label>用途</label>
+        <select id="usage">
+          <option value="">選択</option>
+          <option>一般</option>
+          <option>通信</option>
+        </select>
+      </div>
+      
+      <div class="input-group">
+        <label>電流(A)</label>
+        <input type="number" id="current" placeholder="例:120">
+      </div>
     </div>
-    
-    <div class="input-group">
-      <label>MCCB<br>G1<br>AT値</label>
-      <input type="number" id="g1At" placeholder="任意">
+
+    <div class="result-row">
+      <div class="result-item">記号: <span id="symbol">-</span></div>
+      <div class="result-item">線径: <span id="size" class="red-text">-</span></div>
     </div>
-    
-    <div class="input-group">
-      <label>MC<br>容量<br>[A]</label>
-      <input type="number" id="mcCapacity" placeholder="任意">
-    </div>
-    
-    <div class="input-group">
-      <label>A-O相<br>負荷<br>[A]</label>
-      <input type="number" id="aoCurrent">
-    </div>
-    
-    <div class="input-group">
-      <label>B-O相<br>負荷<br>[A]</label>
-      <input type="number" id="boCurrent">
+
+    <!-- 単相三線セクション -->
+    <div class="section">
+      <h4>単相三線</h4>
+
+      <div class="input-row">
+        <div class="input-group">
+          <label>蓄電池<br>最大放電<br>電流[A]</label>
+          <input type="number" id="batteryMax" placeholder="任意">
+        </div>
+        
+        <div class="input-group">
+          <label>MCCB<br>G1<br>AT値</label>
+          <input type="number" id="g1At" placeholder="任意">
+        </div>
+        
+        <div class="input-group">
+          <label>MC<br>容量<br>[A]</label>
+          <input type="number" id="mcCapacity" placeholder="任意">
+        </div>
+        
+        <div class="input-group">
+          <label>A-O相<br>負荷<br>[A]</label>
+          <input type="number" id="aoCurrent">
+        </div>
+        
+        <div class="input-group">
+          <label>B-O相<br>負荷<br>[A]</label>
+          <input type="number" id="boCurrent">
+        </div>
+      </div>
+
+      <div class="result-row">
+        <div class="result-item">A-O相: <span id="aoSize" class="red-text">-</span></div>
+        <div class="result-item">B-O相: <span id="boSize" class="red-text">-</span></div>
+        <div class="result-item">採用: <span id="maxSize" class="red-text">-</span></div>
+      </div>
+      
+      <div class="result-row" style="margin-top: 8px;">
+        <div class="result-item"><span class="red-text">負荷側O相最大電流: <span id="oCurrent">-</span></span></div>
+        <div class="result-item">負荷側O相線径: <span id="oSize" class="red-text">-</span></div>
+      </div>
+      
+      <div class="note" style="margin-top: 8px; color: #333;">
+        ※ O相負荷側の電流値はA-O間とB-O間の負荷の電流値の合計とするが最大電流はMC容量とする。<br>
+        ※ 蓄電池最大放電電流が各相合計やMC容量より小さい場合は蓄電池最大放電電流の電流値がO相の最大となる。
+      </div>
     </div>
   </div>
 
-  <div class="result-row">
-    <div class="result-item">A-O相: <span id="aoSize" class="red-text">-</span></div>
-    <div class="result-item">B-O相: <span id="boSize" class="red-text">-</span></div>
-    <div class="result-item">採用: <span id="maxSize" class="red-text">-</span></div>
-  </div>
-  
-  <div class="result-row" style="margin-top: 8px;">
-    <div class="result-item"><span class="red-text">負荷側O相最大電流: <span id="oCurrent">-</span></span></div>
-    <div class="result-item">負荷側O相線径: <span id="oSize" class="red-text">-</span></div>
-  </div>
-  
-  <div class="note" style="margin-top: 8px; color: #333;">
-    ※ O相負荷側の電流値はA-O間とB-O間の負荷の電流値の合計とするが最大電流はMC容量とする。<br>
-    ※ 蓄電池最大放電電流が各相合計やMC容量より小さい場合は蓄電池最大放電電流の電流値がO相の最大となる。
-  </div>
-</div>
-
-<!-- 電線選定表セクション -->
-<div class="section">
-  <h4>電線選定表</h4>
+  <!-- 右カラム：電線選定表 -->
+  <div class="right-column">
+    <!-- 電線選定表セクション -->
+    <div class="section" style="border-top: none; padding-top: 0; margin-top: 0;">
+      <h4>電線選定表</h4>
   
   <div class="table-container">
     <table>
@@ -285,8 +302,10 @@ th { background-color: #f0f0f0; font-weight: bold; font-size: 9px; }
     ※ E列(WL1): 400AT以上は3本以下
   </div>
 </div>
+  </div>
+</div>
 
-<!-- 回路図セクション -->
+<!-- 回路図セクション（全幅） -->
 <div class="section">
   <h4>回路図</h4>
   <div style="text-align: center; margin-top: 10px;">
