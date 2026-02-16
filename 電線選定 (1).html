@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>電線選定</title>
+
+<style>
+body { font-family: sans-serif; padding: 10px; font-size: 16px; }
+select, input { font-size: 16px; padding: 4px; margin: 2px 0; }
+.result { margin-top: 4px; font-weight: bold; font-size: 16px; }
+.section { margin-top: 12px; padding-top: 6px; border-top: 2px solid #ccc; }
+.row-result { font-size: 16px; margin: 2px 0; }
+h3, h4 { margin: 0 0 6px 0; }
+
+/* 横並びレイアウト */
+.input-row { display: flex; gap: 8px; margin: 4px 0; align-items: center; }
+.input-group { flex: 1; min-width: 0; }
+.input-group label { display: block; font-size: 14px; margin-bottom: 2px; }
+.input-group select, .input-group input { width: 100%; }
+.result-row { display: flex; gap: 12px; margin: 4px 0; }
+.result-item { flex: 1; }
+
+/* 赤文字 */
+.red-text { color: red; }
+
+/* 表のスタイル */
+.table-container { overflow-x: auto; margin-top: 8px; }
+table { border-collapse: collapse; width: 100%; min-width: 600px; font-size: 13px; }
+th, td { border: 1px solid #333; padding: 3px 4px; text-align: center; line-height: 1.2; }
+th { background-color: #f0f0f0; font-weight: bold; font-size: 12px; }
+.header-row { background-color: #e0e0e0; }
+.note { font-size: 12px; margin-top: 4px; color: #666; line-height: 1.3; }
+</style>
+</head>
+
+<body>
+
+<h3>電線選定</h3>
+
+<div class="input-row">
+  <div class="input-group">
+    <label>線種</label>
+    <select id="wire">
+      <option value="">選択</option>
+      <option>KIV</option>
+      <option>THIV</option>
+      <option>HRIV</option>
+      <option>WLI</option>
+    </select>
+  </div>
+  
+  <div class="input-group">
+    <label>用途</label>
+    <select id="usage">
+      <option value="">選択</option>
+      <option>一般</option>
+      <option>通信</option>
+    </select>
+  </div>
+  
+  <div class="input-group">
+    <label>電流(A)</label>
+    <input type="number" id="current" placeholder="例:120">
+  </div>
+</div>
+
+<div class="result-row">
+  <div class="result-item">記号: <span id="symbol">-</span></div>
+  <div class="result-item">線径: <span id="size" class="red-text">-</span></div>
+</div>
+
+<!-- 単相三線セクション -->
+<div class="section">
+  <h4>単相三線</h4>
+
+  <div class="input-row">
+    <div class="input-group">
+      <label>蓄電池最大放電電流(A)</label>
+      <input type="number" id="batteryMax" placeholder="任意">
+    </div>
+    
+    <div class="input-group">
+      <label>MCCBG1 AT値</label>
+      <input type="number" id="g1At" placeholder="任意">
+    </div>
+    
+    <div class="input-group">
+      <label>MC容量(A)</label>
+      <input type="number" id="mcCapacity" placeholder="任意">
+    </div>
+    
+    <div class="input-group">
+      <label>A-O相負荷(A)</label>
+      <input type="number" id="aoCurrent">
+    </div>
+    
+    <div class="input-group">
+      <label>B-O相負荷(A)</label>
+      <input type="number" id="boCurrent">
+    </div>
+  </div>
+
+  <div class="result-row">
+    <div class="result-item">A-O相: <span id="aoSize" class="red-text">-</span></div>
+    <div class="result-item">B-O相: <span id="boSize" class="red-text">-</span></div>
+    <div class="result-item">採用: <span id="maxSize" class="red-text">-</span></div>
+  </div>
+  
+  <div class="result-row" style="margin-top: 8px;">
+    <div class="result-item"><span class="red-text">負荷側O相最大電流: <span id="oCurrent">-</span></span></div>
+    <div class="result-item">負荷側O相線径: <span id="oSize" class="red-text">-</span></div>
+  </div>
+  
+  <div class="note" style="margin-top: 8px; color: #333;">
+    ※ O相負荷側の電流値はA-O間とB-O間の負荷の電流値の合計とするが最大電流はMC容量とする。<br>
+    ※ 蓄電池最大放電電流が各相合計やMC容量より小さい場合は蓄電池最大放電電流の電流値がO相の最大となる。
+  </div>
+</div>
+
+<!-- 電線選定表セクション -->
+<div class="section">
+  <h4>電線選定表</h4>
+  
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr class="header-row">
+          <th rowspan="2">MCCB容量<br>[AT]</th>
+          <th>A</th>
+          <th>B</th>
+          <th>C</th>
+          <th>D</th>
+          <th>E</th>
+        </tr>
+        <tr class="header-row">
+          <th>KIV<br>HKIV<br>一般40℃</th>
+          <th>KIV<br>WL1 IVH<br>通信40℃</th>
+          <th>HIV<br>THIV<br>一般40℃</th>
+          <th>HRIV<br>一般40℃</th>
+          <th>WL1<br>50℃</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>10</td>
+          <td>2sq</td>
+          <td>5.5sq</td>
+          <td>3.5sq</td>
+          <td>3.5sq</td>
+          <td>5.5sq</td>
+        </tr>
+        <tr>
+          <td>15</td>
+          <td>2sq</td>
+          <td>5.5sq</td>
+          <td>3.5sq</td>
+          <td>3.5sq</td>
+          <td>5.5sq</td>
+        </tr>
+        <tr>
+          <td>20</td>
+          <td>3.5sq</td>
+          <td>5.5sq</td>
+          <td>5.5sq</td>
+          <td>3.5sq</td>
+          <td>5.5sq</td>
+        </tr>
+        <tr>
+          <td>30</td>
+          <td>5.5sq</td>
+          <td>8sq</td>
+          <td>5.5sq</td>
+          <td>5.5sq</td>
+          <td>5.5sq</td>
+        </tr>
+        <tr>
+          <td>50</td>
+          <td>14sq</td>
+          <td>14sq</td>
+          <td>14sq</td>
+          <td>14sq</td>
+          <td>8sq</td>
+        </tr>
+        <tr>
+          <td>60</td>
+          <td>22sq</td>
+          <td>38sq</td>
+          <td>14sq</td>
+          <td>14sq</td>
+          <td>14sq</td>
+        </tr>
+        <tr>
+          <td>75</td>
+          <td>22sq</td>
+          <td>38sq</td>
+          <td>22sq</td>
+          <td>22sq</td>
+          <td>14sq</td>
+        </tr>
+        <tr>
+          <td>100</td>
+          <td>38sq</td>
+          <td>60sq</td>
+          <td>38sq</td>
+          <td>22sq</td>
+          <td>22sq</td>
+        </tr>
+        <tr>
+          <td>150</td>
+          <td>100sq</td>
+          <td>100sq</td>
+          <td>60sq</td>
+          <td>60sq</td>
+          <td>38sq</td>
+        </tr>
+        <tr>
+          <td>200</td>
+          <td>100sq</td>
+          <td>60sqx2or150sq</td>
+          <td>100sq</td>
+          <td>100sq</td>
+          <td>60sq</td>
+        </tr>
+        <tr>
+          <td>250</td>
+          <td>60sqx2or150sq</td>
+          <td>100sqx2</td>
+          <td>100sq</td>
+          <td>100sq</td>
+          <td>80sq</td>
+        </tr>
+        <tr>
+          <td>300</td>
+          <td>100sqx2</td>
+          <td>100sqx2</td>
+          <td>60sqx2or150sq</td>
+          <td>150sq</td>
+          <td>100sq</td>
+        </tr>
+        <tr>
+          <td>400</td>
+          <td>-</td>
+          <td>150sqx2</td>
+          <td>100sqx2</td>
+          <td>100sqx2</td>
+          <td>*150sq</td>
+        </tr>
+        <tr>
+          <td>600</td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
+          <td>*100sqx2</td>
+          <td>*150sqx2</td>
+        </tr>
+        <tr>
+          <td>700</td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
+          <td>*150sqx2</td>
+          <td>*150sqx2</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  
+  <div class="note">
+    ※ D列(HRIV): 600AT以上は2本以下<br>
+    ※ E列(WL1): 400AT以上は3本以下
+  </div>
+</div>
+
+<!-- 回路図セクション -->
+<div class="section">
+  <h4>回路図</h4>
+  <div style="text-align: center; margin-top: 10px;">
+    <img src="KAIRO.svg" alt="回路図" style="max-width: 100%; height: auto;">
+  </div>
+</div>
+
+<script>
+// 記号表
+const symbolTable = [
+  {wire:"KIV", usage:"一般", symbol:"A"},
+  {wire:"KIV", usage:"通信", symbol:"B"},
+  {wire:"THIV", usage:"一般", symbol:"C"},
+  {wire:"THIV", usage:"通信", symbol:"C"},
+  {wire:"HRIV", usage:"一般", symbol:"D"},
+  {wire:"HRIV", usage:"通信", symbol:"D"},
+  {wire:"WLI", usage:"一般", symbol:"E"},
+  {wire:"WLI", usage:"通信", symbol:"B"}
+];
+
+// 選定表
+const table = [
+  {amp:10,  A:"2sq",   B:"5.5sq", C:"3.5sq", D:"3.5sq", E:"5.5sq"},
+  {amp:15,  A:"2sq",   B:"5.5sq", C:"3.5sq", D:"3.5sq", E:"5.5sq"},
+  {amp:20,  A:"3.5sq", B:"5.5sq", C:"5.5sq", D:"3.5sq", E:"5.5sq"},
+  {amp:30,  A:"5.5sq", B:"8sq",   C:"5.5sq", D:"5.5sq", E:"5.5sq"},
+  {amp:50,  A:"14sq",  B:"14sq",  C:"14sq",  D:"14sq",  E:"8sq"},
+  {amp:60,  A:"22sq",  B:"38sq",  C:"14sq",  D:"14sq",  E:"14sq"},
+  {amp:75,  A:"22sq",  B:"38sq",  C:"22sq",  D:"22sq",  E:"14sq"},
+  {amp:100, A:"38sq",  B:"60sq",  C:"38sq",  D:"22sq",  E:"22sq"},
+  {amp:150, A:"100sq", B:"100sq", C:"60sq",  D:"60sq",  E:"38sq"},
+  {amp:200, A:"100sq", B:"60sqx2or150sq", C:"100sq", D:"100sq", E:"60sq"},
+  {amp:250, A:"60sqx2or150sq", B:"100sqx2", C:"100sq", D:"100sq", E:"80sq"},
+  {amp:300, A:"100sqx2", B:"100sqx2", C:"60sqx2or150sq", D:"150sq", E:"100sq"},
+  {amp:400, A:"-", B:"150sqx2", C:"100sqx2", D:"100sqx2", E:"150sq"},
+  {amp:600, A:"-", B:"-", C:"-", D:"100sqx2", E:"150sqx2"},
+  {amp:700, A:"-", B:"-", C:"-", D:"150sqx2", E:"150sqx2"}
+];
+
+function getSize(current, symbol) {
+  const row = table.find(x => current <= x.amp);
+  if (row && row[symbol] && row[symbol] !== "-") {
+    return row[symbol];
+  }
+  return "該当なし";
+}
+
+function calculate() {
+  const wire = document.getElementById("wire").value;
+  const usage = document.getElementById("usage").value;
+  const current = parseFloat(document.getElementById("current").value);
+
+  let symbol = "-";
+  let size = "-";
+
+  const foundSymbol = symbolTable.find(x => x.wire === wire && x.usage === usage);
+  if (foundSymbol) symbol = foundSymbol.symbol;
+
+  if (!isNaN(current) && symbol !== "-") {
+    size = getSize(current, symbol);
+  }
+
+  document.getElementById("symbol").textContent = symbol;
+  document.getElementById("size").textContent = size;
+
+  calculateSinglePhase(symbol);
+}
+
+function calculateSinglePhase(symbol) {
+  const batteryMax = parseFloat(document.getElementById("batteryMax").value);
+  const ao = parseFloat(document.getElementById("aoCurrent").value);
+  const bo = parseFloat(document.getElementById("boCurrent").value);
+  const mc = parseFloat(document.getElementById("mcCapacity").value);
+  const g1 = parseFloat(document.getElementById("g1At").value);
+
+  let aoSize = "-";
+  let boSize = "-";
+  let maxSize = "-";
+  let oCurrent = "-";
+  let oSize = "-";
+
+  if (symbol !== "-") {
+
+    if (!isNaN(ao)) aoSize = getSize(ao, symbol);
+    if (!isNaN(bo)) boSize = getSize(bo, symbol);
+
+    if (!isNaN(g1)) {
+      maxSize = getSize(g1, symbol);   // ★ MCCBG1優先
+    } else if (!isNaN(ao) || !isNaN(bo)) {
+      const maxCurrent = Math.max(ao || 0, bo || 0);
+      maxSize = getSize(maxCurrent, symbol);
+    }
+    
+    // O相の計算
+    if (!isNaN(ao) && !isNaN(bo)) {
+      let oCurrentValue = ao + bo;
+      
+      // MC容量がある場合は、それを上限とする
+      if (!isNaN(mc) && oCurrentValue > mc) {
+        oCurrentValue = mc;
+      }
+      
+      // 蓄電池最大放電電流が各相合計やMC容量より小さい場合は、それを上限とする
+      if (!isNaN(batteryMax) && oCurrentValue > batteryMax) {
+        oCurrentValue = batteryMax;
+      }
+      
+      oCurrent = oCurrentValue + "A";
+      
+      // 電線径を取得（該当なしの場合は「銅バー」）
+      const foundSize = getSize(oCurrentValue, symbol);
+      oSize = (foundSize === "該当なし") ? "銅バー" : foundSize;
+    }
+  }
+
+  document.getElementById("aoSize").textContent = aoSize;
+  document.getElementById("boSize").textContent = boSize;
+  document.getElementById("maxSize").textContent = maxSize;
+  document.getElementById("oCurrent").textContent = oCurrent;
+  document.getElementById("oSize").textContent = oSize;
+}
+
+// イベント
+wire.addEventListener("change", calculate);
+usage.addEventListener("change", calculate);
+current.addEventListener("input", calculate);
+batteryMax.addEventListener("input", calculate);
+aoCurrent.addEventListener("input", calculate);
+boCurrent.addEventListener("input", calculate);
+mcCapacity.addEventListener("input", calculate);
+g1At.addEventListener("input", calculate);
+</script>
+
+</body>
+</html>
