@@ -389,6 +389,31 @@ function calculate() {
   calculateSinglePhase(symbol);
 }
 
+function updateUsageOptions() {
+  const wire = document.getElementById("wire").value;
+  const usageSelect = document.getElementById("usage");
+  
+  // THIV または HRIV の場合は「一般」のみ
+  if (wire === "THIV" || wire === "HRIV") {
+    usageSelect.value = "一般";
+    // 通信オプションを無効化
+    Array.from(usageSelect.options).forEach(option => {
+      if (option.value === "通信") {
+        option.disabled = true;
+        option.style.display = "none";
+      }
+    });
+  } else {
+    // それ以外は通信も選択可能
+    Array.from(usageSelect.options).forEach(option => {
+      option.disabled = false;
+      option.style.display = "";
+    });
+  }
+  
+  calculate();
+}
+
 function calculateSinglePhase(symbol) {
   const batteryMax = parseFloat(document.getElementById("batteryMax").value);
   const ao = parseFloat(document.getElementById("aoCurrent").value);
@@ -444,7 +469,7 @@ function calculateSinglePhase(symbol) {
 }
 
 // イベント
-wire.addEventListener("change", calculate);
+wire.addEventListener("change", updateUsageOptions);
 usage.addEventListener("change", calculate);
 current.addEventListener("input", calculate);
 batteryMax.addEventListener("input", calculate);
