@@ -37,6 +37,9 @@ th { background-color: #f0f0f0; font-weight: bold; font-size: 9px; }
 .header-row { background-color: #e0e0e0; }
 .note { font-size: 11px; margin-top: 4px; color: #666; line-height: 1.3; }
 
+/* 回路図 */
+.diagram-section img { max-width: 100%; height: auto; }
+
 /* PC用（画面幅768px以上） */
 @media (min-width: 768px) {
   body { font-size: 18px; }
@@ -55,6 +58,10 @@ th { background-color: #f0f0f0; font-weight: bold; font-size: 9px; }
   th, td { padding: 4px 5px; line-height: 1.3; }
   th { font-size: 12px; }
   .note { font-size: 12px; }
+  
+  /* 回路図を表と同じサイズに */
+  .diagram-section { max-width: 600px; }
+  .diagram-section img { width: 100%; max-width: 600px; }
 }
 </style>
 </head>
@@ -302,14 +309,14 @@ th { background-color: #f0f0f0; font-weight: bold; font-size: 9px; }
     ※ E列(WL1): 400AT以上は3本以下
   </div>
 </div>
-  </div>
-</div>
 
-<!-- 回路図セクション（全幅） -->
-<div class="section">
-  <h4>回路図</h4>
-  <div style="text-align: center; margin-top: 10px;">
-    <img src="KAIRO.svg" alt="回路図" style="max-width: 100%; height: auto;">
+    <!-- 回路図セクション -->
+    <div class="section diagram-section">
+      <h4>回路図</h4>
+      <div style="text-align: center; margin-top: 10px;">
+        <img src="KAIRO.svg" alt="回路図">
+      </div>
+    </div>
   </div>
 </div>
 
