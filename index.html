@@ -432,10 +432,18 @@ function calculateSinglePhase(symbol) {
     if (!isNaN(ao)) aoSize = getSize(ao, symbol);
     if (!isNaN(bo)) boSize = getSize(bo, symbol);
 
+    // 採用電線径の計算
     if (!isNaN(g1)) {
-      maxSize = getSize(g1, symbol);   // ★ MCCBG1優先
+      // MCCBG1 AT値がある場合は優先
+      maxSize = getSize(g1, symbol);
     } else if (!isNaN(ao) || !isNaN(bo)) {
-      const maxCurrent = Math.max(ao || 0, bo || 0);
+      let maxCurrent = Math.max(ao || 0, bo || 0);
+      
+      // MC容量がある場合は、それを上限とする
+      if (!isNaN(mc) && maxCurrent > mc) {
+        maxCurrent = mc;
+      }
+      
       maxSize = getSize(maxCurrent, symbol);
     }
     
