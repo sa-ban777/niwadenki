@@ -79,7 +79,11 @@ th { background-color: #f0f0f0; font-weight: bold; font-size: 9px; }
 <div class="main-container">
   <!-- 左カラム：負荷電線選定と単相三線 -->
   <div class="left-column">
-    <h3>負荷電線選定</h3>
+    <h3>負荷電線、通信用接地線選定</h3>
+    
+    <div class="note" style="margin-top: 2px; margin-bottom: 6px; color: #333; font-size: 11px;">
+      ※ 通信用接地を確認する時は電流に負荷主幹の電流値（負荷MCCBAT値の合計）を入力する。客先接続電線は考慮しない。
+    </div>
 
     <div class="input-row">
       <div class="input-group">
@@ -109,8 +113,9 @@ th { background-color: #f0f0f0; font-weight: bold; font-size: 9px; }
     </div>
 
     <div class="result-row">
-      <div class="result-item">記号: <span id="symbol">-</span></div>
+      <div class="result-item">列: <span id="symbol">-</span></div>
       <div class="result-item">線径: <span id="size" class="red-text">-</span></div>
+      <div class="result-item">通信用接地線径: <span id="groundSize" class="red-text">-</span></div>
     </div>
 
     <!-- 単相三線セクション -->
@@ -134,12 +139,12 @@ th { background-color: #f0f0f0; font-weight: bold; font-size: 9px; }
         </div>
         
         <div class="input-group">
-          <label>A-O相<br>負荷<br>[A]</label>
+          <label>A-O相<br>負荷<br>合計[A]</label>
           <input type="number" id="aoCurrent">
         </div>
         
         <div class="input-group">
-          <label>B-O相<br>負荷<br>[A]</label>
+          <label>B-O相<br>負荷<br>合計[A]</label>
           <input type="number" id="boCurrent">
         </div>
       </div>
@@ -164,10 +169,6 @@ th { background-color: #f0f0f0; font-weight: bold; font-size: 9px; }
     <!-- 回路図セクション -->
     <div class="section diagram-section">
       <h4>回路図</h4>
-          <p>
-          <a href="01-1単相三線の電流の考え方_(参考L5318G)_Optimized.pdf">単相三線の電流の考え方</a>へ
-          </p>
-
       <div style="text-align: center; margin-top: 2px;">
         <img src="KAIRO.svg" alt="回路図">
       </div>
@@ -379,18 +380,47 @@ function calculate() {
 
   let symbol = "-";
   let size = "-";
+  let groundSize = "-";
 
   const foundSymbol = symbolTable.find(x => x.wire === wire && x.usage === usage);
   if (foundSymbol) symbol = foundSymbol.symbol;
 
   if (!isNaN(current) && symbol !== "-") {
     size = getSize(current, symbol);
+    
+    // 通信用接地線径の計算（線径と同じだが最大60sq）
+    if (size !== "-" && size !== "該当なし") {
+      groundSize = calculateGroundSize(size);
+    }
   }
 
   document.getElementById("symbol").textContent = symbol;
   document.getElementById("size").textContent = size;
+  document.getElementById("groundSize").textContent = groundSize;
 
   calculateSinglePhase(symbol);
+}
+
+function calculateGroundSize(size) {
+  // 「-」や「該当なし」の場合はそのまま返す
+  if (size === "-" || size === "該当なし") return size;
+  
+  // 複数本（x2など）や選択肢（or）が含まれる場合の処理
+  // 例: "60sqx2or150sq" → "60sq", "100sqx2" → "60sq"
+  
+  // まず最初の数値を抽出
+  const match = size.match(/(\d+(\.\d+)?)/);
+  if (!match) return size;
+  
+  const sizeValue = parseFloat(match[1]);
+  
+  // 60sqを超える場合は60sqに制限
+  if (sizeValue > 60) {
+    return "60sq";
+  }
+  
+  // 60sq以下の場合は、その値を返す（複数本や選択肢の記号は除去）
+  return sizeValue + "sq";
 }
 
 function updateUsageOptions() {
