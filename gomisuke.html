@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>ゴミ捨て表</title>
+
+<style>
+body{font-family:sans-serif;margin:20px;}
+input{margin:2px;}
+table{border-collapse:collapse;width:100%;}
+th,td{border:1px solid #ccc;padding:6px;}
+th{background:#eee;cursor:pointer;}
+button{cursor:pointer;}
+</style>
+</head>
+
+<body>
+
+<h2>ゴミ捨て表</h2>
+
+<!-- 追加フォーム -->
+<div>
+<input id="品名" placeholder="品名">
+<input id="種別" placeholder="種別">
+<input id="捨て方" placeholder="捨て方">
+<input id="捨てる場所" placeholder="場所">
+<input id="備考" placeholder="備考">
+<button onclick="addRow()">追加</button>
+</div>
+
+<br>
+
+<table>
+<thead>
+<tr>
+<th onclick="sort('品名')">品名</th>
+<th onclick="sort('種別')">種別</th>
+<th onclick="sort('捨て方')">捨て方</th>
+<th onclick="sort('捨てる場所')">場所</th>
+<th onclick="sort('備考')">備考</th>
+<th>操作</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+
+<script>
+
+const OWNER="あなたのユーザー名";
+const REPO="gomisute-table";
+const FILE="data.json";
+
+/*** ⚠️ 作成したTOKENをここに貼る ***/
+const TOKEN="ghp_xxxxxxxxxxxxx";
+
+let data=[];
+let sha="";
+let asc=true;
+
+async function load(){
+ const res=await fetch(
+   `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`
+ );
+ const json=await res.json();
+
+ sha=json.sha;
+ data=JSON.parse(atob(json.content));
+ render();
+}
+
+function render(){
+ const tb=document.getElementById("tbody");
+ tb.innerHTML="";
+
+ data.forEach((r,i)=>{
+  tb.innerHTML+=`
+  <tr>
+   <td>${r.品名}</td>
+   <td>${r.種別}</td>
+   <td>${r.捨て方}</td>
+   <td>${r.捨てる場所}</td>
+   <td>${r.備考}</td>
+   <td>
+     <button onclick="editRow(${i})">編集</button>
+   </td>
+  </tr>`;
+ });
+}
+
+function addRow(){
+ data.push({
+  品名:品名.value,
+  種別:種別.value,
+  捨て方:捨て方.value,
+  捨てる場所:捨てる場所.value,
+  備考:備考.value
+ });
+
+ save();
+}
+
+function editRow(i){
+ const r=data[i];
+
+ const name=prompt("品名",r.品名);
+ if(name===null)return;
+
+ r.品名=name;
+ r.種別=prompt("種別",r.種別);
+ r.捨て方=prompt("捨て方",r.捨て方);
+ r.捨てる場所=prompt("場所",r.捨てる場所);
+ r.備考=prompt("備考",r.備考);
+
+ save();
+}
+
+function sort(key){
+ data.sort((a,b)=>a[key].localeCompare(b[key]));
+ render();
+}
+
+async function save(){
+
+ const content=btoa(
+  unescape(encodeURIComponent(
+    JSON.stringify(data,null,2)
+  ))
+ );
+
+ await fetch(
+  `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`,
+ {
+  method:"PUT",
+  headers:{
+   "Authorization":"token "+TOKEN,
+   "Content-Type":"application/json"
+  },
+  body:JSON.stringify({
+   message:"update from web",
+   content:content,
+   sha:sha
+  })
+ });
+
+ alert("保存しました");
+ load();
+}
+
+load();
+
+</script>
+
+</body>
+</html>
