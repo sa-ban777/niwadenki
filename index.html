@@ -33,6 +33,9 @@ h3, h4 { margin: 0 0 6px 0; }
 /* 赤文字 */
 .red-text { color: red; }
 
+/* ハイライト用 */
+.highlight-column { background-color: yellow !important; }
+
 /* 表のスタイル（スマホ用：デフォルト） */
 .table-container { overflow-x: auto; margin-top: 8px; }
 table { border-collapse: collapse; width: auto; min-width: 320px; font-size: 10px; }
@@ -398,7 +401,51 @@ function calculate() {
   document.getElementById("size").textContent = size;
   document.getElementById("groundSize").textContent = groundSize;
 
+  // 表の列をハイライト
+  highlightTableColumn(symbol);
+
   calculateSinglePhase(symbol);
+}
+
+function highlightTableColumn(symbol) {
+  // すべてのハイライトをクリア
+  document.querySelectorAll('.highlight-column').forEach(cell => {
+    cell.classList.remove('highlight-column');
+  });
+  
+  // 記号が有効な場合、該当列をハイライト
+  if (symbol !== "-") {
+    // テーブルの全行を取得
+    const table = document.querySelector('table');
+    const rows = table.querySelectorAll('tr');
+    
+    // 列のインデックスマップ（A=0, B=1, C=2, D=3, E=4）
+    const columnMap = { 'A': 0, 'B': 1, 'C': 2, 'D': 3, 'E': 4 };
+    const colIndex = columnMap[symbol];
+    
+    if (colIndex !== undefined) {
+      rows.forEach((row, rowIndex) => {
+        const cells = row.querySelectorAll('th, td');
+        
+        if (rowIndex === 0) {
+          // 1行目：MCCB容量の次の列（インデックス1+colIndex）
+          if (cells[colIndex + 1]) {
+            cells[colIndex + 1].classList.add('highlight-column');
+          }
+        } else if (rowIndex === 1) {
+          // 2行目：MCCB容量がないので直接colIndex
+          if (cells[colIndex]) {
+            cells[colIndex].classList.add('highlight-column');
+          }
+        } else {
+          // データ行：MCCB容量の次の列（インデックス1+colIndex）
+          if (cells[colIndex + 1]) {
+            cells[colIndex + 1].classList.add('highlight-column');
+          }
+        }
+      });
+    }
+  }
 }
 
 function calculateGroundSize(size) {
