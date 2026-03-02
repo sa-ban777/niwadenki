@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>ごみ捨てリスト</title>
+<style>
+body { font-family: sans-serif; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #ccc; padding: 8px; }
+th { background: #f0f0f0; }
+</style>
+</head>
+<body>
+
+<h2>ごみ捨てリスト</h2>
+
+<input type="text" id="search" placeholder="検索..." onkeyup="filterTable()">
+
+<table id="data-table">
+<thead>
+<tr>
+<th>品名</th>
+<th>種別</th>
+<th>捨てる場所</th>
+<th>備考</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<script>
+const csvUrl = "ここにCSVのURLを貼る";
+
+fetch(csvUrl)
+  .then(res => res.text())
+  .then(text => {
+    const rows = text.split("\n").slice(1);
+    const tbody = document.querySelector("#data-table tbody");
+
+    rows.forEach(row => {
+      const cols = row.split(",");
+      if (cols.length >= 4) {
+        const tr = document.createElement("tr");
+        cols.slice(0,4).forEach(col => {
+          const td = document.createElement("td");
+          td.textContent = col;
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      }
+    });
+  });
+
+function filterTable() {
+  const keyword = document.getElementById("search").value.toLowerCase();
+  const rows = document.querySelectorAll("#data-table tbody tr");
+
+  rows.forEach(row => {
+    const text = row.textContent.toLowerCase();
+    row.style.display = text.includes(keyword) ? "" : "none";
+  });
+}
+</script>
+
+</body>
+</html>
