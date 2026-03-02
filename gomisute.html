@@ -2,161 +2,476 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ゴミ捨て表</title>
-
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-body{font-family:sans-serif;margin:20px;}
-input{margin:2px;}
-table{border-collapse:collapse;width:100%;}
-th,td{border:1px solid #ccc;padding:6px;}
-th{background:#eee;cursor:pointer;}
-button{cursor:pointer;}
+  :root {
+    --green: #2d6a4f;
+    --green-light: #52b788;
+    --green-pale: #d8f3dc;
+    --bg: #f8fdf9;
+    --text: #1b3a2d;
+    --border: #b7dfc3;
+    --gray: #6b7f74;
+    --red: #c0392b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+  header {
+    background: var(--green);
+    color: white;
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  header .icon { font-size: 28px; }
+  header h1 { font-size: 1.4rem; font-weight: 700; }
+  main { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
+
+  /* フォーム */
+  .form-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 28px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  .form-card h2 {
+    font-size: 1rem;
+    color: var(--green);
+    margin-bottom: 14px;
+    font-weight: 700;
+  }
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .form-grid input {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 0.92rem;
+    font-family: inherit;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+  .form-grid input:focus {
+    outline: none;
+    border-color: var(--green-light);
+    box-shadow: 0 0 0 3px rgba(82,183,136,0.15);
+  }
+  .form-grid input::placeholder { color: #aac4b2; }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.92rem;
+    font-family: inherit;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: var(--green); color: white; }
+  .btn-primary:hover { background: #245a40; }
+  .btn-primary:disabled { background: #aaa; cursor: not-allowed; }
+  .btn-edit { background: var(--green-pale); color: var(--green); font-size: 0.82rem; padding: 5px 12px; }
+  .btn-edit:hover { background: #bce7c9; }
+  .btn-delete { background: #fde8e8; color: var(--red); font-size: 0.82rem; padding: 5px 12px; }
+  .btn-delete:hover { background: #f5c0c0; }
+
+  /* ステータス */
+  #status {
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 18px;
+    font-size: 0.88rem;
+    display: none;
+  }
+  #status.info { background: #e8f4fd; color: #1a6fa0; display: block; }
+  #status.success { background: #e8f8ee; color: #1a7a3e; display: block; }
+  #status.error { background: #fde8e8; color: var(--red); display: block; }
+
+  /* テーブル */
+  .table-wrap {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: var(--green); color: white; }
+  th {
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 0.88rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  th:hover { background: #245a40; }
+  th .sort-icon { margin-left: 4px; opacity: 0.6; font-size: 0.75rem; }
+  th.sorted .sort-icon { opacity: 1; }
+  td {
+    padding: 11px 14px;
+    font-size: 0.9rem;
+    border-top: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tr:nth-child(even) td { background: #f4fbf6; }
+  tr:hover td { background: var(--green-pale); transition: background 0.15s; }
+  td.ops { white-space: nowrap; display: flex; gap: 6px; }
+  .empty-msg {
+    text-align: center;
+    color: var(--gray);
+    padding: 40px;
+    font-size: 0.95rem;
+  }
+
+  /* モーダル */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: white;
+    border-radius: 14px;
+    padding: 28px 28px 24px;
+    width: 90%;
+    max-width: 480px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  }
+  .modal h3 { font-size: 1rem; color: var(--green); margin-bottom: 16px; }
+  .modal-grid { display: grid; gap: 10px; margin-bottom: 20px; }
+  .modal-grid label { font-size: 0.82rem; color: var(--gray); margin-bottom: 2px; display: block; }
+  .modal-grid input {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 0.92rem;
+    font-family: inherit;
+    width: 100%;
+  }
+  .modal-grid input:focus {
+    outline: none;
+    border-color: var(--green-light);
+    box-shadow: 0 0 0 3px rgba(82,183,136,0.15);
+  }
+  .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+  .btn-cancel { background: #f0f0f0; color: var(--text); }
+  .btn-cancel:hover { background: #e0e0e0; }
+
+  /* トークン設定 */
+  .token-section {
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 22px;
+    font-size: 0.88rem;
+  }
+  .token-section summary { cursor: pointer; color: #8a6000; font-weight: 600; }
+  .token-section .token-inner { margin-top: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .token-section input {
+    flex: 1;
+    min-width: 200px;
+    border: 1px solid #ffe082;
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 0.88rem;
+    font-family: monospace;
+  }
+  .btn-token { background: #f9a825; color: white; padding: 7px 14px; font-size: 0.85rem; }
+  .btn-token:hover { background: #e08f00; }
+  .token-note { color: #8a6000; font-size: 0.8rem; margin-top: 6px; }
 </style>
 </head>
-
 <body>
+<header>
+  <span class="icon">♻️</span>
+  <h1>ゴミ捨て表</h1>
+</header>
+<main>
 
-<h2>ゴミ捨て表</h2>
+  <!-- トークン設定 -->
+  <details class="token-section">
+    <summary>⚙️ GitHub トークン設定（編集・追加に必要）</summary>
+    <div class="token-inner">
+      <input type="password" id="tokenInput" placeholder="ghp_xxxxxxxxxxxx">
+      <button class="btn btn-token" onclick="saveToken()">保存</button>
+    </div>
+    <p class="token-note">※ トークンはブラウザのメモリにのみ保存されます。ページを閉じるとリセットされます。<br>
+    権限: Fine-grained token → <strong>Contents: Read and write</strong> / Classic token → <strong>repo</strong> スコープ</p>
+  </details>
 
-<!-- 追加フォーム -->
-<div>
-<input id="品名" placeholder="品名">
-<input id="種別" placeholder="種別">
-<input id="捨て方" placeholder="捨て方">
-<input id="捨てる場所" placeholder="場所">
-<input id="備考" placeholder="備考">
-<button onclick="addRow()">追加</button>
+  <!-- ステータス -->
+  <div id="status"></div>
+
+  <!-- 追加フォーム -->
+  <div class="form-card">
+    <h2>＋ 新しいアイテムを追加</h2>
+    <div class="form-grid">
+      <input id="f_name" placeholder="品名（例：新聞紙）">
+      <input id="f_type" placeholder="種別（例：資源ゴミ）">
+      <input id="f_how" placeholder="捨て方（例：束ねて）">
+      <input id="f_where" placeholder="捨てる場所">
+      <input id="f_note" placeholder="備考">
+    </div>
+    <button class="btn btn-primary" onclick="addRow()" id="addBtn">追加する</button>
+  </div>
+
+  <!-- テーブル -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortBy(0)" id="th0">品名 <span class="sort-icon">↕</span></th>
+          <th onclick="sortBy(1)" id="th1">種別 <span class="sort-icon">↕</span></th>
+          <th onclick="sortBy(2)" id="th2">捨て方 <span class="sort-icon">↕</span></th>
+          <th onclick="sortBy(3)" id="th3">捨てる場所 <span class="sort-icon">↕</span></th>
+          <th onclick="sortBy(4)" id="th4">備考 <span class="sort-icon">↕</span></th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr><td colspan="6" class="empty-msg">読み込み中...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<!-- 編集モーダル -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>✏️ 編集</h3>
+    <div class="modal-grid">
+      <div><label>品名</label><input id="m_name"></div>
+      <div><label>種別</label><input id="m_type"></div>
+      <div><label>捨て方</label><input id="m_how"></div>
+      <div><label>捨てる場所</label><input id="m_where"></div>
+      <div><label>備考</label><input id="m_note"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveEdit()">保存</button>
+    </div>
+  </div>
 </div>
 
-<br>
-
-<table>
-<thead>
-<tr>
-<th onclick="sort('品名')">品名</th>
-<th onclick="sort('種別')">種別</th>
-<th onclick="sort('捨て方')">捨て方</th>
-<th onclick="sort('捨てる場所')">場所</th>
-<th onclick="sort('備考')">備考</th>
-<th>操作</th>
-</tr>
-</thead>
-<tbody id="tbody"></tbody>
-</table>
-
 <script>
+// ===== 設定 =====
+const OWNER = "sa-ban777";
+const REPO  = "niwadenki";
+const FILE  = "data.json";
+const API   = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`;
 
-const OWNER="あなたのユーザー名";
-const REPO="gomisute-table";
-const FILE="data.json";
+// ===== 状態 =====
+let data = [];
+let sha  = "";
+let token = "";
+let sortCol = -1;
+let sortAsc = true;
+let editIdx = -1;
 
-/*** ⚠️ 作成したTOKENをここに貼る ***/
-const TOKEN="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";
-
-let data=[];
-let sha="";
-let asc=true;
-
-async function load(){
-
- const res = await fetch(
-   "https://api.github.com/repos/sa-ban777/niwadenki/gomisute/data.json"
- );
-
- const json = await res.json();
-
- sha = json.sha;
-
- data = JSON.parse(
-   decodeURIComponent(
-     escape(atob(json.content))
-   )
- );
-
- render();
+// ===== トークン =====
+function saveToken() {
+  const t = document.getElementById("tokenInput").value.trim();
+  if (!t) { setStatus("トークンを入力してください", "error"); return; }
+  token = t;
+  setStatus("トークンを設定しました ✓", "success");
 }
 
-function render(){
- const tb=document.getElementById("tbody");
- tb.innerHTML="";
-
- data.forEach((r,i)=>{
-  tb.innerHTML+=`
-  <tr>
-   <td>${r.品名}</td>
-   <td>${r.種別}</td>
-   <td>${r.捨て方}</td>
-   <td>${r.捨てる場所}</td>
-   <td>${r.備考}</td>
-   <td>
-     <button onclick="editRow(${i})">編集</button>
-   </td>
-  </tr>`;
- });
+// ===== ステータス表示 =====
+function setStatus(msg, type) {
+  const el = document.getElementById("status");
+  el.textContent = msg;
+  el.className = type;
+  if (type === "success") setTimeout(() => { el.style.display = "none"; el.className = ""; }, 3000);
 }
 
-function addRow(){
- data.push({
-  品名:品名.value,
-  種別:種別.value,
-  捨て方:捨て方.value,
-  捨てる場所:捨てる場所.value,
-  備考:備考.value
- });
-
- save();
+// ===== データ読み込み =====
+async function load() {
+  setStatus("データを読み込み中...", "info");
+  try {
+    const res = await fetch(API, {
+      headers: { "Accept": "application/vnd.github+json" }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    sha = json.sha;
+    const decoded = decodeURIComponent(escape(atob(json.content.replace(/\n/g, ""))));
+    data = JSON.parse(decoded);
+    document.getElementById("status").style.display = "none";
+    document.getElementById("status").className = "";
+    render();
+  } catch(e) {
+    setStatus("読み込みエラー: " + e.message, "error");
+    document.getElementById("tbody").innerHTML = `<tr><td colspan="6" class="empty-msg">データの読み込みに失敗しました</td></tr>`;
+  }
 }
 
-function editRow(i){
- const r=data[i];
-
- const name=prompt("品名",r.品名);
- if(name===null)return;
-
- r.品名=name;
- r.種別=prompt("種別",r.種別);
- r.捨て方=prompt("捨て方",r.捨て方);
- r.捨てる場所=prompt("場所",r.捨てる場所);
- r.備考=prompt("備考",r.備考);
-
- save();
+// ===== 描画 =====
+function render() {
+  const tb = document.getElementById("tbody");
+  if (data.length === 0) {
+    tb.innerHTML = `<tr><td colspan="6" class="empty-msg">データがありません。上のフォームから追加してください。</td></tr>`;
+    return;
+  }
+  tb.innerHTML = data.map((r, i) => `
+    <tr>
+      <td>${esc(r.品名)}</td>
+      <td>${esc(r.種別)}</td>
+      <td>${esc(r.捨て方)}</td>
+      <td>${esc(r.捨てる場所)}</td>
+      <td>${esc(r.備考)}</td>
+      <td class="ops">
+        <button class="btn btn-edit" onclick="openEdit(${i})">編集</button>
+        <button class="btn btn-delete" onclick="deleteRow(${i})">削除</button>
+      </td>
+    </tr>`).join("");
 }
 
-function sort(key){
- data.sort((a,b)=>a[key].localeCompare(b[key]));
- render();
+function esc(s) {
+  return (s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
 }
 
-async function save(){
-
- const content=btoa(
-  unescape(encodeURIComponent(
-    JSON.stringify(data,null,2)
-  ))
- );
-
- await fetch(
-  `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`,
- {
-  method:"PUT",
-  headers:{
-   "Authorization":"token "+TOKEN,
-   "Content-Type":"application/json"
-  },
-  body:JSON.stringify({
-   message:"update from web",
-   content:content,
-   sha:sha
-  })
- });
-
- alert("保存しました");
- load();
+// ===== ソート =====
+const KEYS = ["品名","種別","捨て方","捨てる場所","備考"];
+function sortBy(col) {
+  if (sortCol === col) { sortAsc = !sortAsc; }
+  else { sortCol = col; sortAsc = true; }
+  KEYS.forEach((_,i) => {
+    const th = document.getElementById("th" + i);
+    th.classList.remove("sorted");
+    th.querySelector(".sort-icon").textContent = "↕";
+  });
+  const th = document.getElementById("th" + col);
+  th.classList.add("sorted");
+  th.querySelector(".sort-icon").textContent = sortAsc ? "↑" : "↓";
+  const key = KEYS[col];
+  data.sort((a, b) => {
+    const v = (a[key] || "").localeCompare(b[key] || "", "ja");
+    return sortAsc ? v : -v;
+  });
+  render();
 }
 
+// ===== 追加 =====
+async function addRow() {
+  if (!token) { setStatus("先にトークンを設定してください（⚙️ の欄）", "error"); return; }
+  const name  = document.getElementById("f_name").value.trim();
+  if (!name) { setStatus("品名は必須です", "error"); return; }
+  data.push({
+    品名:      name,
+    種別:      document.getElementById("f_type").value.trim(),
+    捨て方:    document.getElementById("f_how").value.trim(),
+    捨てる場所: document.getElementById("f_where").value.trim(),
+    備考:      document.getElementById("f_note").value.trim()
+  });
+  ["f_name","f_type","f_how","f_where","f_note"].forEach(id => document.getElementById(id).value = "");
+  await save();
+}
+
+// ===== 削除 =====
+async function deleteRow(i) {
+  if (!token) { setStatus("先にトークンを設定してください（⚙️ の欄）", "error"); return; }
+  if (!confirm(`「${data[i].品名}」を削除しますか？`)) return;
+  data.splice(i, 1);
+  await save();
+}
+
+// ===== 編集モーダル =====
+function openEdit(i) {
+  editIdx = i;
+  const r = data[i];
+  document.getElementById("m_name").value  = r.品名 || "";
+  document.getElementById("m_type").value  = r.種別 || "";
+  document.getElementById("m_how").value   = r.捨て方 || "";
+  document.getElementById("m_where").value = r.捨てる場所 || "";
+  document.getElementById("m_note").value  = r.備考 || "";
+  document.getElementById("modalOverlay").classList.add("open");
+}
+function closeModal() {
+  document.getElementById("modalOverlay").classList.remove("open");
+  editIdx = -1;
+}
+async function saveEdit() {
+  if (!token) { closeModal(); setStatus("先にトークンを設定してください", "error"); return; }
+  data[editIdx] = {
+    品名:      document.getElementById("m_name").value.trim(),
+    種別:      document.getElementById("m_type").value.trim(),
+    捨て方:    document.getElementById("m_how").value.trim(),
+    捨てる場所: document.getElementById("m_where").value.trim(),
+    備考:      document.getElementById("m_note").value.trim()
+  };
+  closeModal();
+  await save();
+}
+// モーダル外クリックで閉じる
+document.getElementById("modalOverlay").addEventListener("click", function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ===== GitHub へ保存 =====
+async function save() {
+  setStatus("保存中...", "info");
+  document.getElementById("addBtn").disabled = true;
+  try {
+    // 最新のshaを取得してからPUT（競合防止）
+    const check = await fetch(API, { headers: { "Authorization": "token " + token, "Accept": "application/vnd.github+json" } });
+    if (check.ok) { const j = await check.json(); sha = j.sha; }
+
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+    const res = await fetch(API, {
+      method: "PUT",
+      headers: {
+        "Authorization": "token " + token,
+        "Content-Type": "application/json",
+        "Accept": "application/vnd.github+json"
+      },
+      body: JSON.stringify({ message: "update from web", content, sha })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || `HTTP ${res.status}`);
+    }
+    const result = await res.json();
+    sha = result.content.sha;
+    setStatus("保存しました ✓", "success");
+    render();
+  } catch(e) {
+    setStatus("保存エラー: " + e.message, "error");
+    // 失敗したらリロードして整合性を保つ
+    await load();
+  } finally {
+    document.getElementById("addBtn").disabled = false;
+  }
+}
+
+// ===== 起動 =====
 load();
-
 </script>
-
 </body>
 </html>
