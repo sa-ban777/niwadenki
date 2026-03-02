@@ -28,7 +28,7 @@ th {
 </head>
 <body>
 
-<h2>ごみ捨てリストB</h2>
+<h2>ごみ捨てリスト</h2>
 
 <input type="text" id="search" placeholder="検索..." onkeyup="filterTable()">
 
@@ -45,7 +45,7 @@ th {
 </table>
 
 <script>
-const csvUrl = "ここにCSVのURLを貼る";
+const csvUrl = "ここにCSVのURLを貼る"; // Googleスプレッドシート公開CSVのURLに変更してください
 
 fetch(csvUrl)
   .then(res => res.text())
